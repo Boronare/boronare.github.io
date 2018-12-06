@@ -1,4 +1,4 @@
-<html lang="ko">
+<html>
 <head>
 <title>KEYBOARD INSTRUMENT</title>
 <style>
@@ -227,17 +227,17 @@ function playNote(isi,p,fi,t){
 <div class="row" style="width:612px">
 <div style="float:left">
 <select id="instrument" onchange="chginst(this.value)">
-<option value="piano">ÇÇ¾Æ³ë</option>
-<option value="acou">¾îÄí½ºÆ½ ±âÅ¸</option>
-<option vlaue="elec">ÀÏ·ºÆ®¸¯ ±âÅ¸</option>
-<option value="kalim">¿À¸£°ñ</option>
-<option value="cemba">ÇÏÇÁ½ÃÄÚµå</option>
+<option value="piano">í”¼ì•„ë…¸</option>
+<option value="acou">ì–´ì¿ ìŠ¤í‹± ê¸°íƒ€</option>
+<option vlaue="elec">ì¼ë ‰íŠ¸ë¦­ ê¸°íƒ€</option>
+<option value="kalim">ì˜¤ë¥´ê³¨</option>
+<option value="cemba">í•˜í”„ì‹œì½”ë“œ</option>
 <option disabled>----------</option>
-<option value="kick">Å±µå·³</option>
-<option value="snare">½º³×¾î</option>
-<option value="percu">ÆÛÄ¿¼Ç</option>
-<option value="crash">½É¹úÁî</option>
-<option value="hihat">ÇÏÀÌÇÞ</option>
+<option value="kick">í‚¥ë“œëŸ¼</option>
+<option value="snare">ìŠ¤ë„¤ì–´</option>
+<option value="percu">í¼ì»¤ì…˜</option>
+<option value="crash">ì‹¬ë²Œì¦ˆ</option>
+<option value="hihat">í•˜ì´í–‡</option>
 </select>
 <select id="pitch" onchange="chgpit(this.value)">
 <option>C2</option>
@@ -302,9 +302,9 @@ function playNote(isi,p,fi,t){
 <option>B6</option>
 </select>
 </div>
-<div class="btn"><label for="file">À½¼ºÆÄÀÏ</label><input type="file" id="file" name="file" style="display:none" onchange="fileinput(this)"></div>
-<div class="btn" onclick="listen()">µé¾îº¸±â</div>
-<div id="chgbtn" class="btn" onclick="setchg()">ÇÒ´ç</div>
+<div class="btn"><label for="file">ìŒì„±íŒŒì¼</label><input type="file" id="file" name="file" style="display:none" onchange="fileinput(this)"></div>
+<div class="btn" onclick="listen()">ë“¤ì–´ë³´ê¸°</div>
+<div id="chgbtn" class="btn" onclick="setchg()">í• ë‹¹</div>
 </div>
 </form>
 <div id="kbdContainer">
@@ -405,9 +405,9 @@ function playNote(isi,p,fi,t){
 </div>
 </div>
 <div class="row" style="width:600px;">
-<div class="btn" id="stopBtn" onclick="stopPlay()" style="float:right; display:none;">ÁßÁö</div>
-<div class="btn" id="playBtn" onclick="playNotes()" style="float:right;">Àç»ý</div>
-<div class="btn" onclick="toggleRecord()" style="float:right;">³ìÀ½</div>
+<div class="btn" id="stopBtn" onclick="stopPlay()" style="float:right; display:none;">ì¤‘ì§€</div>
+<div class="btn" id="playBtn" onclick="playNotes()" style="float:right;">ìž¬ìƒ</div>
+<div class="btn" onclick="toggleRecord()" style="float:right;">ë…¹ìŒ</div>
 </div>
 <textarea id="notes" style="width:600px; height:200px;">
 </textarea>
