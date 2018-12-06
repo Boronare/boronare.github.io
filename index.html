@@ -26,18 +26,32 @@
 	padding:3px;
 	margin-left:10px;
 }
+.btn.active{
+	background:#7f7;
+}
+.key:hover{
+	background:#ddd;
+}
+.set .key:hover{
+	background:#9ff;
+}
 </style>
-<script src="./Tone.js"></script>
+<script src="https://boronare.github.io/kbdInst/Tone.js"></script>
 <script>
-var piano = new Tone.Sampler({'C4':'pianoC4.mp3'},{'release':1,'baseUrl':'./'}).toMaster();
-var kalim = new Tone.Sampler({'C4':'kalimbaC4.mp3'},{'release':1,'baseUrl':'./'}).toMaster();
-var cemba = new Tone.Sampler({'C4':'cembaloC4.mp3'},{'release':1,'baseUrl':'./'}).toMaster();
+var piano = new Tone.Sampler({'C4':'pianoC4.mp3'},{'release':1,'baseUrl':'https://boronare.github.io/kbdInst/'}).toMaster();
+var kalim = new Tone.Sampler({'C4':'kalimbaC4.wav'},{'release':1,'baseUrl':'https://boronare.github.io/kbdInst/'}).toMaster();
+var cemba = new Tone.Sampler({'C4':'cembaloC4.wav'},{'release':1,'baseUrl':'https://boronare.github.io/kbdInst/'}).toMaster();
 var kmap = new Map();
 var tmap = {'t':"C4",'i':"piano"};
 var file,fileRecent=false;
 var files=0;
 var pl,plset;
 var plList=[];
+var mset=false;
+var recording=false,recStart=0;
+var recnotes="";
+var playHandle;
+var n;
 
 kmap.set(90,{'t':"C3",'i':"piano"});
 kmap.set(83,{'t' :"C#3",'i':"piano"});
@@ -81,13 +95,31 @@ document.onkeydown=function(e){
 	if(dkey.get(e.keyCode)) return false;
 	dkey.set(e.keyCode,true);
 	document.getElementById("k"+e.keyCode).classList.add("pressed");
-	eval(kmap.get(e.keyCode).i).triggerAttack(kmap.get(e.keyCode).t);
+	if(kmap.get(e.keyCode).i==undefined){
+		plList[kmap.get(e.keyCode).f].start();
+		if(recording)
+			notes.value=notes.value.concat(",{'s':",Date.now()-recStart,",'p':true,'f':",kmap.get(e.keyCode).f,"}");
+	}
+	else{
+		eval(kmap.get(e.keyCode).i).triggerAttack(kmap.get(e.keyCode).t);
+		if(recording)
+			notes.value=notes.value.concat(",{'s':",Date.now()-recStart,",'p':true,'i':",kmap.get(e.keyCode).i,",'t':'"+kmap.get(e.keyCode).t+"'}");
+	}
 	return false;
 }
 document.onkeyup=function(e){
 	dkey.delete(e.keyCode);
 	document.getElementById("k"+e.keyCode).classList.remove("pressed");
-	eval(kmap.get(e.keyCode).i).triggerRelease(kmap.get(e.keyCode).t);
+	if(kmap.get(e.keyCode).i==undefined){
+		plList[kmap.get(e.keyCode).f].stop();
+		if(recording)
+			notes.value=notes.value.concat(",{'s':",Date.now()-recStart,",'p':false,'f':",kmap.get(e.keyCode).f,"}");
+	}
+	else{
+		eval(kmap.get(e.keyCode).i).triggerRelease(kmap.get(e.keyCode).t);
+		if(recording)
+			notes.value=notes.value.concat(",{'s':",Date.now()-recStart,",'p':false,'i':",kmap.get(e.keyCode).i,",'t':'"+kmap.get(e.keyCode).t+"'}");
+	}
 }
 function fileinput(f){
 	pl=new Tone.Player({"url":URL.createObjectURL(f.files[0]),"loop":false});
@@ -111,24 +143,101 @@ function listen(){
 		eval(tmap.i).triggerAttack(tmap.t);
 	}
 }
+function keySet(keyNum){
+	if(mset){
+		var kn=parseInt(keyNum.substr(1));
+		if(!fileRecent)
+			kmap.set(kn,tmap);
+		else{
+			if(!plset){
+				plList.push(pl);
+				plset=plList.length-1;
+			}
+			kmap.set(kn,{'f':plset});
+		}
+	}
+}
+function setchg(){
+	var chgbtn = document.getElementById("chgbtn");
+	if(mset){
+		mset=false;
+		chgbtn.classList.remove("active");
+		return;
+	}
+	mset=true;
+	chgbtn.classList.add("active");
+	
+}
+var keys=document.getElementsByClassName('key');
+function load(){
+	for(var i=0;i<keys.length;i++){
+		keys[i].onclick=function(){keySet(this.id);};
+	}
+}
+function toggleRecord(){
+	if(recording){
+		playBtn.style.display='block';
+		stopBtn.style.display='none';
+		recording=false;
+		notes.value=notes.value.concat("]");
+		return;
+	}
+	recording=true;
+	notes.value="[null";
+	recStart=Date.now();
+	playBtn.style.display='none';
+	stopBtn.style.display='block';
+}
+function playNotes(){
+	n=eval(notes.value);
+	if(n==undefined||n.length==1) return;
+	playBtn.style.display='none';
+	stopBtn.style.display='block';
+	playHandle=setTimeout(null,0);
+	for(var i=1;i<n.length;i++){
+		if(n[i].i==undefined)
+			setTimeout(playNote,n[i].s,true,n[i].p,n[i].f);
+		else
+			setTimeout(playNote,n[i].s,false,n[i].p,n[i].i,n[i].t);
+	}
+	setTimeout(stopPlay,n[n.length-1].s);
+}
+function stopPlay(){
+	if(recording){toggleRecord(); return;}
+	playBtn.style.display='block';
+	stopBtn.style.display='none';
+	for(var i=0;i<n.length;i++){
+		clearTimeout(i+playHandle);
+	}
+}
+function playNote(isi,p,fi,t){
+	if(isi){
+		if(p)plList[fi].start();
+		else plList[fi].stop();
+	}
+	else{
+		if(p)fi.triggerAttack(t);
+		else fi.triggerRelease(t);
+	}
+}
 </script>
 </head>
-<body>
+<body onload="load()">
 <form>
-<div class="row">
+<div class="row" style="width:612px">
 <div style="float:left">
 <select id="instrument" onchange="chginst(this.value)">
-<option value="piano">í”¼ì•„ë…¸</option>
-<option value="acou">ì–´ì¿ ìŠ¤í‹± ê¸°íƒ€</option>
-<option vlaue="elec">ì¼ë ‰íŠ¸ë¦­ ê¸°íƒ€</option>
-<option value="kalim">ì˜¤ë¥´ê³¨</option>
-<option value="cemba">í•˜í”„ì‹œì½”ë“œ</option>
+<option value="piano">ÇÇ¾Æ³ë</option>
+<option value="acou">¾îÄí½ºÆ½ ±âÅ¸</option>
+<option vlaue="elec">ÀÏ·ºÆ®¸¯ ±âÅ¸</option>
+<option value="kalim">¿À¸£°ñ</option>
+<option value="cemba">ÇÏÇÁ½ÃÄÚµå</option>
 <option disabled>----------</option>
-<option value="kick">í‚¥ë“œëŸ¼</option>
-<option value="snare">ìŠ¤ë„¤ì–´</option>
-<option value="percu">í¼ì»¤ì…˜</option>
-<option value="crash">ì‹¬ë²Œì¦ˆ</option>
-<option value="hihat">í•˜ì´í–‡</option>
+<option value="kick">Å±µå·³</option>
+<option value="snare">½º³×¾î</option>
+<option value="percu">ÆÛÄ¿¼Ç</option>
+<option value="crash">½É¹úÁî</option>
+<option value="hihat">ÇÏÀÌÇŞ</option>
 </select>
 <select id="pitch" onchange="chgpit(this.value)">
 <option>C2</option>
@@ -193,11 +302,12 @@ function listen(){
 <option>B6</option>
 </select>
 </div>
-<div class="btn"><label for="file">ìŒì„±íŒŒì¼</label><input type="file" id="file" name="file" style="display:none" onchange="fileinput(this)"></div>
-<div class="btn" onclick="listen()">ë“¤ì–´ë³´ê¸°</div>
-<div class="btn" onclick="setchg()">í• ë‹¹</div>
+<div class="btn"><label for="file">À½¼ºÆÄÀÏ</label><input type="file" id="file" name="file" style="display:none" onchange="fileinput(this)"></div>
+<div class="btn" onclick="listen()">µé¾îº¸±â</div>
+<div id="chgbtn" class="btn" onclick="setchg()">ÇÒ´ç</div>
 </div>
 </form>
+<div id="kbdContainer">
 <div class="row">
 <div class="key" id="k192">`</div>
 <div class="key" id="k49">1</div>
@@ -293,6 +403,14 @@ function listen(){
     width: 45px;
 ">Ctrl</div>
 </div>
+</div>
+<div class="row" style="width:600px;">
+<div class="btn" id="stopBtn" onclick="stopPlay()" style="float:right; display:none;">ÁßÁö</div>
+<div class="btn" id="playBtn" onclick="playNotes()" style="float:right;">Àç»ı</div>
+<div class="btn" onclick="toggleRecord()" style="float:right;">³ìÀ½</div>
+</div>
+<textarea id="notes" style="width:600px; height:200px;">
+</textarea>
 
 </body>
 </html>
