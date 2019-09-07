@@ -3,19 +3,6 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <style>
-canvas{
-	border:1px solid #ddd;
-}
-img{
-	display:none;
-}
-</style>
-</head>
-<body onload="startGame()"><!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<style>
 canvas {
     border:1px solid #ddd;
 }
@@ -39,7 +26,7 @@ var keyCtrl=false;
 var keySpcBar=false;
 var keyR=false;
 var music=true;
-var musicTime=0;
+var musicTime=9999999999999999999;
 var level=level1;
 var recall=new component(18,30,0,0,function(){
 	ctx=myGameArea.context;
@@ -229,7 +216,7 @@ function level1(){
 zzfx_v=.5;zzfx_x=new AudioContext;zzfx=(a,e=0.5,b=1,f=0,d=.1,g=0,h=0,k=0,l=0)=>{let S=44100,P=Math.PI;a*=2*P/S;a*=1+f*(2*Math.random()-1);g*=1E3*P/(S**2);b=0<b?S*(10<b?10:b)|0:1;d*=b|0;k*=2*P/S;l*=P;f=[];for(var m=0,n=0,c=0;c<b;++c)f[c]=e*zzfx_v*Math.cos(m*a*Math.cos(n*k+l))*(c<d?c/d:1-(c-d)/(b-d)),m+=1+h*(2*Math.random()-1),n+=1+h*(2*Math.random()-1),a+=g;e=zzfx_x.createBuffer(1,b,S);a=zzfx_x.createBufferSource();e.getChannelData(0).set(f);a.buffer=e;a.connect(zzfx_x.destination);a.start();return a}
 tempo=300;
 bgm=()=>{
-	st=(freq,delay,volume=1,length=1,f=0)=>{setTimeout(()=>{if(music)zzfx(freq,volume,length,f)},tempo*delay)};
+	st=(freq,delay,volume=0.5,length=1,f=0)=>{setTimeout(()=>{if(music)zzfx(freq,volume,length,f)},tempo*delay)};
 	if(!music) return;
 	zzfx(391);
 	st(391,3);
@@ -254,233 +241,6 @@ bgm=()=>{
 	st(196,30);
 	setTimeout(bgm,tempo*32);
 	musicTime=Date.now();
-}
-bgm();
-</script>
-</body>
-</html>
-
-<img src='img/player.png' id='imgp'>
-<script>
-var gameHeight=270;
-var gameWidth=480;
-var player;
-var imgp;
-var blocks = [];
-var miscs = [];
-var keyLeft=false;
-var keyRight=false;
-var keyCtrl=false;
-var keySpcBar=false;
-var keyR=false;
-var level=level1;
-var recall=new component(18,30,0,0,function(){
-	ctx=myGameArea.context;
-	ctx.globalAlpha=0.2;
-	ctx.fillStyle='#50f';
-	if(--recall.size<-2)recall.size=2;
-	size=(recall.size>0?recall.size:-recall.size);
-	ctx.fillRect(recall.x+size,recall.y+size,18-2*size,30-2*size);
-	ctx.globalAlpha=1;
-});
-recall.active=false;
-function startGame() {
-	document.onkeydown=function(e){
-	console.log(e);
-		if(e.keyCode==37)//LeftKeyPressed
-			keyLeft=true;
-		else if(e.keyCode==39)//RightKeyPressed
-			keyRight=true;
-		else if(e.keyCode==32)//SpaceBarPressed
-			keySpcBar=true;
-		else if(e.keyCode==17)//Lshift pressed
-			keyCtrl=true;
-		else if(e.keyCode==82)//R pressed
-			keyR=true;
-	}
-	document.onkeyup=function(e){
-		if(e.keyCode==37)//LeftKey released
-			keyLeft=false;
-		else if(e.keyCode==39)//RightKey released
-			keyRight=false;
-		else if(e.keyCode==32)//SpaceBar released
-			keySpcBar=false;
-	}
-	imgp=document.getElementById('imgp');
-	level();
-    myGameArea.start();
-}
-
-var myGameArea = {
-    canvas : document.createElement("canvas"),
-    start : function() {
-        this.canvas.width = gameWidth;
-        this.canvas.height = gameHeight;
-        this.context = this.canvas.getContext("2d");
-        document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-		level1();
-        this.interval = setInterval(updateGameArea, 25);
-    },
-    clear : function() {
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
-}
-
-function component(width, height, x, y, misc) {
-    this.width = width;
-    this.height = height;
-    this.x = x;
-    this.y = y;
-	this.r = ()=>{return this.x+this.width;}
-	this.b = ()=>{return this.y+this.height;}
-
-	this.draw = (sw)=>{
-		ctx = myGameArea.context;
-		switch(sw){
-		case 0:
-			if(this.left)ctx.setTransform(-1,0,0,1,144,0);
-			ctx.drawImage(imgp,this.ground?this.offset:72,0,24,30,this.left?123-this.x:this.x-3,this.y,24,30);
-			if(this.left)ctx.setTransform(1,0,0,1,0,0);
-			break;
-		case 1:
-			ctx.fillStyle = '#888'
-			ctx.fillRect(this.x, this.y, this.width, this.height);
-			break;
-		case 2:
-			misc();
-			break;
-		}
-	}
-}
-function initplayer(x,y){
-    player = new component(18, 30, x, y);
-	player.speedX=0;
-	player.speedY=0;
-	player.ground=false;
-	player.left=false;
-	player.waitframe=1;
-	player.offset=0;
-	player.update=playerupdate;
-}
-function playerupdate(){
-	player.speedX=Math.trunc(player.speedX/1.3);
-	if(keyLeft||keyRight){
-		player.left=keyLeft;
-		player.speedX+=keyLeft?-2:2;
-		if(player.waitframe<=0){
-			player.waitframe=1;
-			player.offset+=24;
-		}else player.waitframe--;
-		if(player.offset>=144) player.offset=48;
-	}else{
-		player.offset=0;
-	}
-	if(keyCtrl){
-		keyCtrl=false;
-		if(recall.active){
-			recall.active=false;
-			player.x=recall.x;
-			player.y=recall.y;
-		}else{
-			recall.size=10;
-			recall.active=true;
-			recall.x=player.x;
-			recall.y=player.y;
-		}
-	}
-	player.speedY+=1;
-	if(player.ground&&keySpcBar) player.speedY=-10;
-	if(player.speedX!=0||player.speedY!=0){ 
-		player.ground=false;
-		for(i in blocks){
-			o=blocks[i];
-			preintersectX=player.r()>o.x&&player.x<o.r();
-			preintersectY=player.b()>o.y&&player.y<o.b();
-			if(preintersectY)ground=true;
-			dir=(player.b()+player.speedY>o.y&&player.y<o.b())?1:player.y+player.speedY<o.b()&&player.b()>o.y?-1:0;
-			if(preintersectY){
-				if(player.r()+player.speedX>o.x&&player.x<o.r()) {player.speedX=o.x-player.r();}
-				else if(player.x+player.speedX<o.r()&&player.r()>o.x) {player.speedX=o.r()-player.x;}
-			}else if(!preintersectX){
-				right=player.r()+player.speedX>o.x&&player.x<o.r()
-				left=player.x+player.speedX<o.r()&&player.r()>o.x;
-				if(player.b()+player.speedY>o.y&&player.y<o.b()) {
-					if(right) {player.speedX=o.x-player.r(); player.speedY=o.y-player.b();player.ground=true;}
-					else if(left) {player.speedX=o.r()-player.x; player.speedY=o.y-player.b();player.ground=true;}
-				}
-				else if(player.y+player.speedY<o.b()&&player.b()>o.y) {
-					if(right) {player.speedX=o.x-player.r();  player.speedY=o.b()-player.y;}
-					else if(left) {player.speedX=o.r()-player.x;  player.speedY=o.b()-player.y;}
-				}
-			}
-			if(player.b()+player.speedY>o.y&&player.y<o.b()&&preintersectX) {player.speedY=o.y-player.b();player.ground=true;}
-			else if(player.y+player.speedY<o.b()&&player.b()>o.y&&preintersectX) player.speedY=o.b()-player.y;
-		}
-		if(player.speedY>8) player.speedY=8;
-		player.x+=player.speedX;
-		player.y+=player.speedY;
-		ctx=myGameArea.context;
-		ctx.fillText("x:"+player.x+" y:"+player.y+" speedx:"+player.speedX+" speedy:"+player.speedY,10,10);
-		ctx.fillText(player.ground,10,30);
-	}
-}
-function updateGameArea() {
-    myGameArea.clear();
-	if(keyR){keyR=false; level();}
-	player.update();
-    player.draw(0);
-	if(recall.active) recall.draw(2);
-    for(i in blocks) blocks[i].draw(1);
-	for(i in miscs) miscs[i].update(2);
-}
-//Levels
-function home(){
-	player={pUpdate:()=>{},
-		draw:(a)=>{}};
-	recall.active=false;
-	blocks=[];
-	miscs=[];
-	//btn1=new btn;
-}
-function level1(){
-	initplayer(10,120);
-	recall.active=false;
-	blocks=[];
-	miscs=[];
-	blocks.push(new component(0, gameHeight, gameWidth, 0));
-	blocks.push(new component(0, gameHeight, 0, 0));
-	blocks.push(new component(gameWidth, 0, 0, 0));
-	blocks.push(new component(gameWidth, 0, 0, gameHeight));
-	blocks.push(new component(30,30,200,240));
-	blocks.push(new component(30,30,260,200));
-}
-//Music & SFX. using zzfx
-zzfx_v=.5;zzfx_x=new AudioContext;zzfx=(a,e=0.5,b=1,f=0,d=.1,g=0,h=0,k=0,l=0)=>{let S=44100,P=Math.PI;a*=2*P/S;a*=1+f*(2*Math.random()-1);g*=1E3*P/(S**2);b=0<b?S*(10<b?10:b)|0:1;d*=b|0;k*=2*P/S;l*=P;f=[];for(var m=0,n=0,c=0;c<b;++c)f[c]=e*zzfx_v*Math.cos(m*a*Math.cos(n*k+l))*(c<d?c/d:1-(c-d)/(b-d)),m+=1+h*(2*Math.random()-1),n+=1+h*(2*Math.random()-1),a+=g;e=zzfx_x.createBuffer(1,b,S);a=zzfx_x.createBufferSource();e.getChannelData(0).set(f);a.buffer=e;a.connect(zzfx_x.destination);a.start();return a}
-tempo=300;
-bgm=()=>{
-	st=(freq,delay,volume=0.5,length=1,f=0)=>{setTimeout(()=>{zzfx(freq,volume,length,f)},tempo*delay)};
-	zzfx(391);
-	st(391,3);
-	st(391,8);
-	st(391,11);
-	st(523,16,0.3);
-	st(523,19,0.3);
-	st(523,24,0.3);
-	st(523,27,0.3);
-	st(783,30,0.2);
-	zzfx(165);
-	st(329,3);
-	st(247,6);
-	st(165,8);
-	st(329,11);
-	st(247,14);
-	st(130,16);
-	st(261,19);
-	st(196,22);
-	st(130,24);
-	st(261,27);
-	st(196,30);
-	setTimeout(bgm,tempo*32);
 }
 bgm();
 </script>
